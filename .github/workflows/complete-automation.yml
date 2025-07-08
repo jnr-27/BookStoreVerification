@@ -74,8 +74,8 @@ jobs:
       with:
         name: test-results
         path: |
-          BookStoreAPIAutomation/target/surefire-reports/
-          BookStoreAPIAutomation/target/extent-reports/
+          BookStoreAPIAutomation/BookStoreAPIAutomation/target/surefire-reports/
+          BookStoreAPIAutomation/BookStoreAPIAutomation/target/extent-reports/
         retention-days: 30
 
     - name: Upload test reports
@@ -84,7 +84,7 @@ jobs:
       with:
         name: test-reports
         path: |
-          BookStoreAPIAutomation/test-output/
+          BookStoreAPIAutomation/BookStoreAPIAutomation/test-output/
         retention-days: 30
 
     - name: Test Results Summary
