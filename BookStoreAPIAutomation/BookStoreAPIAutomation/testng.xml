@@ -1,0 +1,13 @@
+<suite name="BookStore API Test Suite">
+    <test name="BookStore API Tests">
+        <classes>
+            <class name="com.book.test.health.HealthTest"/>
+            <class name="com.book.test.user.UserAccountTest"/>
+            <class name="com.book.test.book.BookTest"/>
+            <class name="com.book.test.user.UserLoginValidationTest"/>
+            <class name="com.book.test.user.UserSignUpValidationTest"/>
+            <class name="com.book.test.book.BookValidationTest"/>
+
+        </classes>
+    </test>
+</suite>
