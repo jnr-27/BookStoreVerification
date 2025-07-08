@@ -1,11 +1,11 @@
-name: API Test Automation
+name: FastAPI + API Test Automation
 
 on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch:
     inputs:
       env:
         description: 'Select the environment'
@@ -20,13 +20,33 @@ env:
   JAVA_VERSION: '17'
 
 jobs:
-  api-tests:
+  build-and-test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    # --- FastAPI Setup ---
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install FastAPI dependencies
+      working-directory: bookstore
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Start FastAPI server in background
+      working-directory: bookstore
+      run: |
+        nohup uvicorn main:app --host 0.0.0.0 --port 8000 --proxy-headers --reload &
+        sleep 10
+        curl --fail http://127.0.0.1:8000/docs || exit 1
+
+    # --- Java API Test Automation ---
     - name: Set up Java 17
       uses: actions/setup-java@v4
       with:
@@ -36,44 +56,45 @@ jobs:
     - name: Set up Maven
       uses: s4u/setup-maven-action@main
       with:
-        maven-version: '3.9.6'  # or latest stable
+        maven-version: '3.9.6'
 
     - name: Compile project
+      working-directory: BookStoreAPIAutomation
       run: mvn compile
-      
+
     - name: Run API tests
-      run: mvn test 
+      working-directory: BookStoreAPIAutomation
+      run: mvn test
       env:
-        # Add any environment variables needed for your tests
-        env: ${{ vars.env }}
-        
+        env: ${{ github.event.inputs.env || 'QA' }}
+
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results
         path: |
-          target/surefire-reports/
-          target/extent-reports/
+          BookStoreAPIAutomation/target/surefire-reports/
+          BookStoreAPIAutomation/target/extent-reports/
         retention-days: 30
-        
+
     - name: Upload test reports
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-reports
         path: |
-          test-output/
+          BookStoreAPIAutomation/test-output/
         retention-days: 30
-        
+
     - name: Test Results Summary
       if: always()
       run: |
         echo "=== Test Execution Summary ==="
-        if [ -d "target/surefire-reports" ]; then
-          echo "TestNG reports generated in target/surefire-reports/"
+        if [ -d "BookStoreAPIAutomation/target/surefire-reports" ]; then
+          echo "TestNG reports generated in BookStoreAPIAutomation/target/surefire-reports/"
         fi
-        if [ -d "target/extent-reports" ]; then
-          echo "Extent reports generated in target/extent-reports/"
+        if [ -d "BookStoreAPIAutomation/target/extent-reports" ]; then
+          echo "Extent reports generated in BookStoreAPIAutomation/target/extent-reports/"
         fi
-        echo "================================" 
+        echo "================================"
