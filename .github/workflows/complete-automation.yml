@@ -1,0 +1,79 @@
+name: API Test Automation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch: # Allows manual trigger
+    inputs:
+      env:
+        description: 'Select the environment'
+        required: true
+        type: choice
+        default: QA
+        options:
+          - QA
+          - PROD
+
+env:
+  JAVA_VERSION: '17'
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: 17
+
+    - name: Set up Maven
+      uses: s4u/setup-maven-action@main
+      with:
+        maven-version: '3.9.6'  # or latest stable
+
+    - name: Compile project
+      run: mvn compile
+      
+    - name: Run API tests
+      run: mvn test 
+      env:
+        # Add any environment variables needed for your tests
+        env: ${{ vars.env }}
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          target/surefire-reports/
+          target/extent-reports/
+        retention-days: 30
+        
+    - name: Upload test reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-reports
+        path: |
+          test-output/
+        retention-days: 30
+        
+    - name: Test Results Summary
+      if: always()
+      run: |
+        echo "=== Test Execution Summary ==="
+        if [ -d "target/surefire-reports" ]; then
+          echo "TestNG reports generated in target/surefire-reports/"
+        fi
+        if [ -d "target/extent-reports" ]; then
+          echo "Extent reports generated in target/extent-reports/"
+        fi
+        echo "================================" 
