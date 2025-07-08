@@ -59,11 +59,11 @@ jobs:
         maven-version: '3.9.6'
 
     - name: Compile project
-      working-directory: BookStoreAPIAutomation
+      working-directory: BookStoreAPIAutomation/BookStoreAPIAutomation
       run: mvn compile
 
     - name: Run API tests
-      working-directory: BookStoreAPIAutomation
+      working-directory: BookStoreAPIAutomation/BookStoreAPIAutomation
       run: mvn test
       env:
         env: ${{ github.event.inputs.env || 'QA' }}
